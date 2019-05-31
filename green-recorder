@@ -483,7 +483,7 @@ class Handler:
         output = subprocess.check_output(["xwininfo | grep -e Width -e Height -e Absolute"], shell=True)[:-1]
         
         global areaaxis
-        areaaxis = [int(l.split(':')[1]) for l in output.split('\n')]
+        areaaxis = [int(l.split(':')[1]) for l in output.decode('UTF-8', 'ignore').split('\n')]
         
         global WindowXAxis, WindowYAxis, WindowWidth, WindowHeight
         WindowXAxis = areaaxis[0]
@@ -507,7 +507,7 @@ class Handler:
         output = subprocess.check_output(["xwininfo -name \"Area Chooser\" | grep -e Width -e Height -e Absolute"], shell=True)[:-1]
         
         global areaaxis
-        areaaxis = [int(l.split(':')[1]) for l in output.split('\n')]
+        areaaxis = [int(l.split(':')[1]) for l in output.decode('UTF-8', 'ignore').split('\n')]
         
         global WindowXAxis, WindowYAxis, WindowWidth, WindowHeight
         WindowXAxis = areaaxis[0] + 12
