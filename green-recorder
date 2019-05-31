@@ -20,12 +20,26 @@ gi.require_version('Gtk','3.0')
 
 from gi.repository import Gtk, Gdk, GLib, AppIndicator3 as appindicator
 from pydbus import SessionBus
-import subprocess, signal, threading, datetime, urllib, gettext, locale, os, ConfigParser, sys
+import subprocess, signal, threading, datetime, gettext, locale, os, sys
+
+try:
+    # Python 3
+    from configparser import ConfigParser
+except ImportError:
+    # Python 2
+    from ConfigParser import SafeConfigParser as ConfigParser
+
+try:
+    # Python 3
+    from urllib.parse import unquote
+except ImportError:
+    # Python 2
+    from urllib import unquote
 
 # Configuration
-confDir =  os.path.join(GLib.get_user_config_dir(), 'green-recorder/')
+confDir = os.path.join(GLib.get_user_config_dir(), 'green-recorder/')
 confFile = os.path.join(confDir + "config.ini")
-config = ConfigParser.ConfigParser()
+config = ConfigParser()
 
 if not os.path.exists(confDir):
   os.makedirs(confDir)
@@ -71,7 +85,7 @@ except:
   DisplayServer = "xorg"
   pass #Ok, cause it means user is using Xorg.
   
-print "You are recording on: " + str(DisplayServer)
+print("You are recording on: " + str(DisplayServer))
 
 if "wayland" in DisplayServer:
   DisplayServer = "gnomewayland"
@@ -103,7 +117,7 @@ def recorderindicator():
     indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
     
     menu = Gtk.Menu()
-    stoprecordingbutton = Gtk.MenuItem(_('Stop Recording'))
+    stoprecordingbutton = Gtk.MenuItem(label=_('Stop Recording'))
     stoprecordingbutton.connect('activate', stoprecording)
     menu.append(stoprecordingbutton)
     menu.show_all()
@@ -266,7 +280,7 @@ def stoprecording(_):
  
 def record():
     global RecorderFullPathName # grab the path
-    RecorderFullPathName = urllib.unquote(folderchooser.get_uri() + '/' + filename.get_text() + '.' + formatchooser.get_active_id())
+    RecorderFullPathName = unquote(folderchooser.get_uri() + '/' + filename.get_text() + '.' + formatchooser.get_active_id())
 
     abs_path=RecorderFullPathName.replace("file://",'')
     if os.path.exists(abs_path) and filename.get_text() is not "":
@@ -300,9 +314,9 @@ def record():
     RecorderFrames = str(frames.get_value_as_int())
     
     if len(filename.get_text()) < 1:
-      RecorderFullPathName = urllib.unquote(folderchooser.get_uri() + '/' + str(datetime.datetime.now()) + '.' + formatchooser.get_active_id())
+      RecorderFullPathName = unquote(folderchooser.get_uri() + '/' + str(datetime.datetime.now()) + '.' + formatchooser.get_active_id())
     else:
-      RecorderFullPathName = urllib.unquote(folderchooser.get_uri() + '/' + filename.get_text() + '.' + formatchooser.get_active_id())
+      RecorderFullPathName = unquote(folderchooser.get_uri() + '/' + filename.get_text() + '.' + formatchooser.get_active_id())
       
     RecorderAbsPathName = RecorderFullPathName.replace("file://", "")
     
@@ -435,13 +449,13 @@ try:
   audiosourcesids = subprocess.check_output("pacmd list-sources | grep -e device.string", shell=True)
 except Exception as e:
   print(e)
-audiosourcesnames = audiosourcesnames.split("\n")[:-1]
+audiosourcesnames = audiosourcesnames.split(b"\n")[:-1]
 
 for i in range(len(audiosourcesnames)):
-  audiosourcesnames[i] = audiosourcesnames[i].replace("\t\tdevice.description = ", "")
-  audiosourcesnames[i] = audiosourcesnames[i].replace('"', "")
+  audiosourcesnames[i] = audiosourcesnames[i].replace(b"\t\tdevice.description = ", b"")
+  audiosourcesnames[i] = audiosourcesnames[i].replace(b'"', b"")
   
-  audiosource.append(str(i), audiosourcesnames[i])
+  audiosource.append(str(i), audiosourcesnames[i].decode('UTF-8', 'replace'))
   
 audiosource.set_active(0)
 
@@ -455,7 +469,7 @@ if "wayland" in DisplayServer:
   formatchooser.set_active(0)
 
   try:
-    s = subprocess.check_output("echo $GDK_BACKEND", shell=True)
+    s = os.getenv('GDK_BACKEND', '')
     if "x11" not in s:
       sendnotification(_("You didn't run the program using the application icon (desktop file). This will cause the program not to work. Run it using the icon from the menus only. (Need to export GDK_BACKEND=x11 first)"), 6)
   except Exception as e:
@@ -487,7 +501,7 @@ class Handler:
         stoprecording(_)
         
     def playbuttonclicked(self, GtkButton):
-        subprocess.call(["xdg-open", urllib.unquote(RecorderAbsPathName)])
+        subprocess.call(["xdg-open", unquote(RecorderAbsPathName)])
 
     def areasettings(self, GtkButton):
         output = subprocess.check_output(["xwininfo -name \"Area Chooser\" | grep -e Width -e Height -e Absolute"], shell=True)[:-1]
@@ -517,13 +531,13 @@ class Handler:
           config.write(newconfFile)
           
     def filenamechanged(self, GtkEntry):
-        config.set('Options', 'filename', urllib.unquote(filename.get_text()))
+        config.set('Options', 'filename', unquote(filename.get_text()))
         global confFile
         with open(confFile, 'w+') as newconfFile:
           config.write(newconfFile)
                
     def folderchosen(self, GtkFileChooserButton):
-        config.set('Options', 'folder', urllib.unquote(folderchooser.get_uri()))
+        config.set('Options', 'folder', unquote(folderchooser.get_uri()))
         global confFile
         with open(confFile, 'w+') as newconfFile:
           config.write(newconfFile)
@@ -564,7 +578,7 @@ builder.connect_signals(Handler())
 
 # Load CSS for Area Chooser.
 style_provider = Gtk.CssProvider()
-css = """
+css = b"""
 #AreaChooser {
     background-color: rgba(255, 255, 255, 0);
     border: 1px solid red;
