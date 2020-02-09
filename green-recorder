@@ -51,17 +51,17 @@ else:
   if VideosFolder is None:
     VideosFolder = os.environ['HOME']
     
-  config.add_section('Options')
-  config.set('Options', 'frames', '30')
-  config.set('Options', 'delay', '0')
-  config.set('Options', 'folder', "file://" + VideosFolder)
-  config.set('Options', 'command', '')
-  config.set('Options', 'filename', '')
-  config.set('Options', 'videocheck', 'True')
-  config.set('Options', 'audiocheck', 'True')
-  config.set('Options', 'mousecheck', 'True')
-  config.set('Options', 'followmousecheck', 'False')
-  with open(confFile, 'wb') as confFile2:
+  config['Options'] = {}
+  config['Options']['frames'] = '30'
+  config['Options']['delay'] = '0'
+  config['Options']['folder'] = "file://" + VideosFolder
+  config['Options']['command'] = ''
+  config['Options']['filename'] = ''
+  config['Options']['videocheck'] = 'True'
+  config['Options']['audiocheck'] = 'True'
+  config['Options']['mousecheck'] = 'True'
+  config['Options']['followmousecheck'] = 'False'
+  with open(confFile, 'w') as confFile2:
     config.write(confFile2)
 
 # Localization.
